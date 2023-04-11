@@ -17,7 +17,6 @@ from shapely import LineString, Point
 curv = gpd.read_file('C:/Practica_Ivan_Giraldo/Taludes_v3.0/Curvas.dxf')
 dis = gpd.read_file('C:/Practica_Ivan_Giraldo/Taludes_v3.0/Diseño.dxf')
 
-xA = 0 #Variable aux global para coger los siguientes 3 puntos de diseño
 mA = 0 #Variable aux global que contiene pendiente media (debe usarse en el siguiente bucle como mO1 solo para seccionar)
 
 m1 = 0
@@ -26,6 +25,7 @@ bO1 = 0
 mM = 0
 bM = 0
 b1 = 0
+bOA = 0
 
 fila = []
 columna = []
@@ -43,13 +43,13 @@ def Diseño(dis):
     for j in dis.itertuples():
     # fila = []
         k = (j.geometry)
-        getCoordsDis(k)
+    getCoordsDis(k)
 
 # Funcion para obtener xyz de cada punto de la linea de diseño
 def getCoordsDis(n):
     
     # llamar a las variable globales
-    global Z, xr, xA
+    global Z, xA
     
     #Variable vacia para capturar primera cota que encuentre
     x1 = None
@@ -76,26 +76,26 @@ def getCoordsDis(n):
                 else:
                     x2 = x
                     y2 = y
-                    xA = x
             else:
                 x3=x
                 y3=y
-                print (x1, x2, x3,)
-            
-    # ejecutar el calculo de recta de diseño con los datos obtenidos
-    rec(x1, y1, x2, y2, x3, y3)
-    
-    for i in curv.itertuples():
-        b1 = (i.geometry)
-        GetCoordsCur(b1)
-    fila.append(Z)
-    # xr = x1
-    
+                # print (x1, x2, x3, z)
+                # ejecutar el calculo de recta de diseño con los datos obtenidos
+                rec(x1, y1, x2, y2, x3, y3)
+                
+                # xr = x1
+                x1 = x2
+                y1 = y2
+                x2 = x3
+                y2 = y3
+                x3 = None
+    recF(x1, y1, x2, y2)
+
 #Calculo de la recta
 def rec(x1, y1, x2, y2, x3, y3):
     
     # Variables globales
-    global m1, mO1, mM, bM, bO1, b1, mA
+    global m1, mO1, mM, bM, bO1, mA, bOA, b1
     
     # Calcular pendientes de las rectas te la linea de diseño 
     m1 = (y2 - y1) / (x2 - x1)
@@ -107,7 +107,6 @@ def rec(x1, y1, x2, y2, x3, y3):
     
     # Pendiente media entre ambas ortogonales
     mM =  (mO1 + mO2)/2
-    mA = mM
     
     #calculo para b media
     bM = (mM * x2) - y2
@@ -117,7 +116,46 @@ def rec(x1, y1, x2, y2, x3, y3):
     
     #calculo para b de la recta 1
     b1 = (m1 * x1) - y1
-
+    
+    if mA == 0:
+        mA = mM
+        bOA = bM
+        
+    else:
+        mO1 = mA
+        bO1 = bOA
+        mA = mM
+        bOA = bM
+    
+    for i in curv.itertuples():
+        p = (i.geometry)
+        GetCoordsCur(p)
+    # fila.append(Z)
+    
+#Calculo de la recta
+def recF(x1, y1, x2, y2):
+    
+    # Variables globales
+    global m1, mO1, mM, bM, bO1, mA, bOA, b1
+    print ("paso por aqui")
+    
+    # Calcular pendientes de las rectas te la linea de diseño 
+    m1 = (y2 - y1) / (x2 - x1)
+    
+    # Calculo de ortogonales perpendiculares a las rectas
+    mO1 = (-1 /m1)
+    
+    #calculo para b de la recta ortogonal 1 mO1
+    bO1 = (mO1 * x2) - y2
+    
+    #calculo para b de la recta 1
+    b1 = (m1 * x1) - y1
+    
+    for i in curv.itertuples():
+        p = (i.geometry)
+        GetCoordsCur(p)
+    # fila.append(Z)
+    
 # Funcion para obtener xyz de cada punto de la linea de las curvas
 def GetCoordsCur(n):
     global Z
@@ -132,7 +170,7 @@ def seccion (x, y, z):
     
     #calculo de distancias para seccionar 
     global mM, mO1, m1, b1, bM, bO1
-    
+   
     R = (np.sqrt((mO1)**2+(1)))
     resul1 = (((mO1*x-y)-bO1)/R)
     
@@ -146,9 +184,9 @@ def distancia (x, y, z, m, b):
     
     raiz = (np.sqrt((m)**2+(1*1)))
     resultado = (((m*x-y)-b)/raiz)
-    # print (resultado, z)
-    obj = restante(x, y, z, resultado)
-    fila.append(obj)
+    print (resultado, x,y,z)
+    # obj = restante(x, y, z, resultado)
+    # fila.append(obj)
     # print ("guardado con exito")
     # print("{:.4}".format(resultado))
 
