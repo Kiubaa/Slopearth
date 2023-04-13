@@ -89,13 +89,15 @@ def getCoordsDis(n):
                 x2 = x3
                 y2 = y3
                 x3 = None
-    recF(x1, y1, x2, y2)
+    # recF(x1, y1, x2, y2)
 
 #Calculo de la recta
 def rec(x1, y1, x2, y2, x3, y3):
     
     # Variables globales
     global m1, mO1, mM, bM, bO1, mA, bOA, b1
+    
+    # print ("paso 1")
     
     # Calcular pendientes de las rectas te la linea de diseño 
     m1 = (y2 - y1) / (x2 - x1)
@@ -123,21 +125,25 @@ def rec(x1, y1, x2, y2, x3, y3):
         
     else:
         mO1 = mA
-        bO1 = bOA
         mA = mM
+        bO1 = bOA
         bOA = bM
+        print (bO1, bM)
     
     for i in curv.itertuples():
         p = (i.geometry)
         GetCoordsCur(p)
     # fila.append(Z)
+    mO1 = 0
+    bO1 = 0
     
 #Calculo de la recta
 def recF(x1, y1, x2, y2):
     
     # Variables globales
     global m1, mO1, mM, bM, bO1, mA, bOA, b1
-    print ("paso por aqui")
+    
+    # print("print 2")
     
     # Calcular pendientes de las rectas te la linea de diseño 
     m1 = (y2 - y1) / (x2 - x1)
@@ -160,7 +166,7 @@ def recF(x1, y1, x2, y2):
 def GetCoordsCur(n):
     global Z
     # Recorre cada punto y extrae xyz
-    for punto in n.coords:
+    for punto in reversed(n.coords):
         x, y, z = punto
         if z==Z :
             #llamado a la funcion para seccionar los puntos
@@ -170,6 +176,12 @@ def seccion (x, y, z):
     
     #calculo de distancias para seccionar 
     global mM, mO1, m1, b1, bM, bO1
+    
+    if bM > 0:
+        bM = bM * (-1)
+    
+    if bO1 > 0:
+        bO1 = bO1 * (-1)
    
     R = (np.sqrt((mO1)**2+(1)))
     resul1 = (((mO1*x-y)-bO1)/R)
@@ -181,6 +193,12 @@ def seccion (x, y, z):
         distancia(x, y, z, m1, b1)
         
 def distancia (x, y, z, m, b):
+    
+    if b < 0:
+        b = b * (1)
+        
+    if m < 0:
+        m = m * (1)
     
     raiz = (np.sqrt((m)**2+(1*1)))
     resultado = (((m*x-y)-b)/raiz)
